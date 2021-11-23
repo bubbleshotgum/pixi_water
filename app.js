@@ -49,28 +49,88 @@ function createWaterDrop(x, y)
 {
     let geometry = new PIXI.Geometry(),
         material = new PIXI.MeshMaterial(PIXI.Texture.from("./waterdrop.png"))
-    geometry.addAttribute('positions', [x, x, x, y, y, x, y, y], 2);
+    geometry.addAttribute('positions', [x,x, x,y, y,x, y,y], 2);
     geometry.addAttribute('uvs', [0,0, 0,1, 1,0, 1,1],2)
     geometry.addIndex([0,1,2, 1,3,2])
 
     material.alpha = .5
     let drop = new PIXI.Mesh(geometry, material)
     drop.verticesBuffer.static = false
-    drop.data = drop.verticesBuffer.data
     app.stage.addChild(drop)
 
-    console.log(drop.data)
-    console.log(drop.verticesBuffer)
     drops.push(drop)
 }
-
+let counter = 0,
+    locked = null,
+    lockedDirs = []
 function animate() {
     // displacementSprite.x += 8
     // displacementSprite.y += 3
+    counter++
+    let i = 0
     drops.forEach(drop => {
-        drop.data[Math.floor(Math.random() * drop.data.length) - 1] += Math.floor(Math.random() * 45 + 20) * (Math.random() > .5 ? 1 : -1)
+        if(!locked)
+        {
+            locked = Math.floor(Math.random() * 2 + 5) * (Math.random() > .5 ? 1 : -1)
+            lockedDirs.push([])
+            for(; i < lockedDirs.length; i++)
+            {
+                lockedDirs[i] = []
+                switch(Math.floor(Math.random() * 8 + 1))
+                {
+                    case 1:
+                        lockedDirs[i].push(0)
+                        lockedDirs[i].push(2)
+                        break
+                    case 2:
+                        lockedDirs[i].push(1)
+                        lockedDirs[i].push(5)
+                        break
+                    case 3:
+                        lockedDirs[i].push(3)
+                        lockedDirs[i].push(7)
+                        break
+                    case 4:
+                        lockedDirs[i].push(4)
+                        lockedDirs[i].push(6)
+                        break
+                    case 5:
+                        lockedDirs[i].push(0)
+                        lockedDirs[i].push(1)
+                        break
+                    case 6:
+                        lockedDirs[i].push(2)
+                        lockedDirs[i].push(3)
+                        break
+                    case 7:
+                        lockedDirs[i].push(4)
+                        lockedDirs[i].push(5)
+                        break
+                    case 8:
+                        lockedDirs[i].push(6)
+                        lockedDirs[i].push(7)
+                        break
+                    default:
+                        lockedDirs[i] = null
+                }
+            }
+            i = 0
+        }
+        if(lockedDirs[i])
+            lockedDirs[i].forEach(index => {
+                drop.verticesBuffer.data[index] += locked
+            })
         drop.verticesBuffer.update()
+        i++
     })
+    if(counter >= 100)
+    {
+        createWaterDrop(Math.floor(Math.random() * app.screen.width), Math.floor(Math.random() * app.screen.height))
+        counter = 0
+        locked = null
+        for(i = 0; i < lockedDirs.length; i++)
+            lockedDirs[i] = null
+    }
     requestAnimationFrame(animate)
 }
 
